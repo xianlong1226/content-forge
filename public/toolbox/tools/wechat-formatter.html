@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>公众号排版器 — CraftBox</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Noto+Serif+SC:wght@400;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11/highlight.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+  <style>
+    :root {
+      --bg: #f8f7f4;
+      --bg-elevated: #ffffff;
+      --bg-card: #f0eeea;
+      --fg: #1a1a1a;
+      --fg-muted: #8a8580;
+      --accent: #b8922e;
+      --accent-glow: rgba(184, 146, 46, 0.15);
+      --border: #e0dcd5;
+      --border-accent: #d4c9a8;
+      --radius: 10px;
+      --font-display: 'Playfair Display', 'Noto Serif SC', serif;
+      --font-body: 'Noto Serif SC', Georgia, serif;
+      --font-sans: 'Noto Sans SC', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-body);
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* === TOP BAR === */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-elevated);
+      height: 56px;
+      flex-shrink: 0;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .back-link {
+      color: var(--fg-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-family: var(--font-sans);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.2s;
+    }
+
+    .back-link:hover { color: var(--accent); }
+
+    .topbar-title {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    .topbar-title span { color: var(--accent); }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Theme selector */
+    .theme-select {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--fg);
+      padding: 6px 14px;
+      border-radius: 99px;
+      font-family: var(--font-sans);
+      font-size: 0.82rem;
+      cursor: pointer;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      padding-right: 30px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238a8580' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+    }
+
+    .theme-select:hover { border-color: var(--border-accent); }
+
+    .btn-copy {
+      background: var(--accent);
+      color: #ffffff;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 99px;
+      font-family: var(--font-sans);
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-copy:hover { transform: scale(1.04); box-shadow: 0 4px 20px var(--accent-glow); }
+
+    .btn-copy.copied {
+      background: #2ecc71;
+    }
+
+    /* === MAIN LAYOUT === */
+    .main {
+      display: flex;
+      height: calc(100vh - 56px);
+    }
+
+    .editor-pane, .preview-pane {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .editor-pane {
+      border-right: 1px solid var(--border);
+    }
+
+    .pane-header {
+      padding: 10px 20px;
+      font-size: 0.72rem;
+      color: var(--fg-muted);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-elevated);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .pane-header .char-count {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
+    /* Editor textarea */
+    #editor {
+      flex: 1;
+      background: var(--bg);
+      color: var(--fg);
+      border: none;
+      padding: 24px;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      line-height: 1.8;
+      resize: none;
+      outline: none;
+      tab-size: 2;
+    }
+
+    #editor::placeholder { color: var(--fg-muted); }
+
+    /* Preview area */
+    .preview-scroll {
+      flex: 1;
+      overflow-y: auto;
+      background: var(--bg-elevated);
+    }
+
+    .preview-container {
+      max-width: 580px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+
+    /* Divider label */
+    .divider-label {
+      display: flex;
+      align-items: center;
+      padding: 0 4px;
+      color: var(--border);
+      user-select: none;
+    }
+
+    .divider-label::before,
+    .divider-label::after {
+      content: '';
+      width: 1px;
+      height: 32px;
+      background: var(--border);
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--fg-muted); }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      top: 72px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: #2ecc71;
+      color: #fff;
+      padding: 10px 24px;
+      border-radius: 99px;
+      font-family: var(--font-sans);
+      font-size: 0.88rem;
+      opacity: 0;
+      transition: all 0.3s ease;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .main { flex-direction: column; }
+      .editor-pane, .preview-pane { height: 50vh; }
+      .editor-pane { border-right: none; border-bottom: 1px solid var(--border); }
+      .divider-label { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <a class="back-link" href="../index.html">← 工具箱</a>
+      <div class="topbar-title">公众号排版<span>器</span></div>
+    </div>
+    <div class="topbar-right">
+      <select class="theme-select" id="themeSelect">
+        <option value="ink-gold">🖌 墨金</option>
+        <option value="clean-snow">❄️ 清雪</option>
+        <option value="ink-green">🌿 墨绿</option>
+        <option value="warm-rose">🌹 暖红</option>
+      </select>
+      <button class="btn-copy" id="btnCopy" onclick="copyToClipboard()">复制到公众号</button>
+    </div>
+  </div>
+
+  <!-- Main Split -->
+  <div class="main">
+    <div class="editor-pane">
+      <div class="pane-header">
+        Markdown 编辑
+        <span class="char-count" id="charCount">0 字</span>
+      </div>
+      <textarea id="editor" placeholder="在这里写 Markdown，右侧实时预览公众号效果..."></textarea>
+    </div>
+
+    <div class="divider-label"></div>
+
+    <div class="preview-pane">
+      <div class="pane-header">
+        公众号预览
+        <span style="font-size: 0.68rem; color: var(--fg-muted); text-transform: none; letter-spacing: 0;">以实际效果为准</span>
+      </div>
+      <div class="preview-scroll" id="previewScroll">
+        <div class="preview-container" id="previewContainer">
+          <div id="preview"></div>
+          <div id="footnotes"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">✓ 已复制，粘贴到公众号编辑器即可</div>
+
+  <script>
+    const editor = document.getElementById('editor');
+    const preview = document.getElementById('preview');
+    const footnotesEl = document.getElementById('footnotes');
+    const charCount = document.getElementById('charCount');
+    const themeSelect = document.getElementById('themeSelect');
+    const previewContainer = document.getElementById('previewContainer');
+    const btnCopy = document.getElementById('btnCopy');
+
+    // Default sample content
+    const defaultContent = `# 用 Markdown 写公众号
+
+写公众号文章，排版总是一件麻烦事。用 Markdown 写作，一键转换，从此告别排版烦恼。
+
+## 为什么用 Markdown？
+
+Markdown 是一种**轻量级标记语言**，让你专注于内容，而不是格式。
+
+- 写作效率提升 3 倍
+- 格式统一，不会出现排版混乱
+- 一次写作，多平台发布
+
+## 代码展示
+
+支持语法高亮的代码块：
+
+\`\`\`javascript
+function hello() {
+  console.log("Hello, WeChat!");
+}
+\`\`\`
+
+行内代码也支持：使用 \`npm install\` 安装依赖。
+
+## 引用
+
+> 工欲善其事，必先利其器。
+>
+> — 《论语》
+
+## 表格
+
+| 工具 | 特点 | 推荐度 |
+|------|------|--------|
+| 墨金主题 | 优雅金线，墨色为底 | ★★★★★ |
+| 清雪主题 | 简洁清爽，蓝色点缀 | ★★★★ |
+| 墨绿主题 | 自然沉稳 | ★★★★ |
+| 暖红主题 | 热情醒目 | ★★★★ |
+
+## 链接转脚注
+
+微信公众号不支持外链，所以 [CraftBox 工具箱](https://github.com) 会自动把链接转为脚注，显示在文章末尾。
+
+## 图片占位
+
+微信公众号不支持外链图片，排版器会自动标记图片位置：
+
+![封面图](cover-2025.png)
+
+复制到公众号后，在对应位置手动上传图片即可。
+
+![数据图表](charts/quarterly-report.png)
+
+![团队合照](https://example.com/photos/team-photo.jpg)
+
+---
+
+*试试切换右上角的主题，找到你喜欢的风格 ✨*
+`;
+
+    // Collect links and build footnotes
+    let linkIndex = 0;
+    const linkMap = new Map();
+
+    // Wait for hljs to be available (guard against async loading)
+    function waitForHljs(cb) {
+      if (typeof hljs !== 'undefined') return cb();
+      let tries = 0;
+      const iv = setInterval(() => {
+        if (typeof hljs !== 'undefined' || ++tries > 50) {
+          clearInterval(iv);
+          cb();
+        }
+      }, 100);
+    }
+
+    // Simple HTML escape fallback when hljs is unavailable
+    function escapeHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ============================================
+    // Theme style maps — all inline for WeChat compat
+    // ============================================
+    const THEMES = {
+      'ink-gold': {
+        h2Border: '#c9a84c',
+        h3Border: '#c9a84c',
+        bqBorder: '#c9a84c',
+        bqBg: '#faf8f2',
+        codeColor: '#c0392b',
+        codeBg: '#f5f2eb',
+        linkColor: '#c9a84c',
+      },
+      'clean-snow': {
+        h2Border: '#1a73e8',
+        h3Border: '#1a73e8',
+        bqBorder: '#1a73e8',
+        bqBg: '#f0f7ff',
+        codeColor: '#e65100',
+        codeBg: '#fff3e0',
+        linkColor: '#1a73e8',
+      },
+      'ink-green': {
+        h2Border: '#2e7d32',
+        h3Border: '#2e7d32',
+        bqBorder: '#2e7d32',
+        bqBg: '#f1f8e9',
+        codeColor: '#c62828',
+        codeBg: '#f5f2eb',
+        linkColor: '#2e7d32',
+      },
+      'warm-rose': {
+        h2Border: '#c0392b',
+        h3Border: '#c0392b',
+        bqBorder: '#c0392b',
+        bqBg: '#fdf0ee',
+        codeColor: '#8e44ad',
+        codeBg: '#f3e5f5',
+        linkColor: '#c0392b',
+      },
+    };
+
+    let currentTheme = 'ink-gold';
+    function T() { return THEMES[currentTheme]; }
+
+    // ============================================
+    // Custom renderer — ALL styles inline for WeChat
+    // ============================================
+    const renderer = new marked.Renderer();
+
+    renderer.paragraph = function(text) {
+      if (typeof text === 'object') text = text.text || '';
+      return `<p style="margin:0 0 16px;text-align:justify;">${text}</p>`;
+    };
+
+    renderer.heading = function(text, level) {
+      if (typeof text === 'object') {
+        level = text.depth;
+        text = text.text || '';
+      }
+      const t = T();
+      if (level === 1) {
+        return `<h1 style="text-align:center;font-size:22px;font-weight:700;margin:0 0 8px;color:#1a1a1a;line-height:1.6;">${text}</h1>`;
+      }
+      if (level === 2) {
+        return `<h2 style="font-size:18px;font-weight:700;margin:32px 0 16px;padding-bottom:8px;border-bottom:2px solid ${t.h2Border};color:#1a1a1a;">${text}</h2>`;
+      }
+      if (level === 3) {
+        return `<h3 style="font-size:16px;font-weight:700;margin:24px 0 12px;color:#1a1a1a;padding-left:10px;border-left:3px solid ${t.h3Border};">${text}</h3>`;
+      }
+      return `<h${level} style="font-size:15px;font-weight:700;margin:20px 0 8px;color:#333;">${text}</h${level}>`;
+    };
+
+    renderer.strong = function(text) {
+      if (typeof text === 'object') text = text.text || '';
+      return `<strong style="color:#1a1a1a;font-weight:700;">${text}</strong>`;
+    };
+
+    renderer.em = function(text) {
+      if (typeof text === 'object') text = text.text || '';
+      return `<em style="color:#666;font-style:italic;">${text}</em>`;
+    };
+
+    renderer.link = function(href, title, text) {
+      if (typeof href === 'object') {
+        text = href.text || '';
+        title = href.title || '';
+        href = href.href || '';
+      }
+      const t = T();
+      if (!href || href.startsWith('#')) {
+        return `<span style="color:${t.linkColor};">${text}</span>`;
+      }
+      linkIndex++;
+      const idx = linkIndex;
+      linkMap.set(idx, { href, text });
+      return `<span style="color:${t.linkColor};border-bottom:1px solid #ddd;">${text}<sup>${idx}</sup></span>`;
+    };
+
+    renderer.code = function(code, language) {
+      if (typeof code === 'object') {
+        language = code.lang || '';
+        code = code.text || '';
+      }
+      let highlighted;
+      if (typeof hljs !== 'undefined') {
+        try {
+          if (language && hljs.getLanguage(language)) {
+            highlighted = hljs.highlight(code, { language }).value;
+          } else {
+            highlighted = hljs.highlightAuto(code).value;
+          }
+        } catch {
+          highlighted = escapeHtml(code);
+        }
+      } else {
+        highlighted = escapeHtml(code);
+      }
+      return `<pre style="margin:16px 0;padding:16px;background:#1e1e1e;border-radius:6px;overflow-x:auto;"><code style="background:none;color:#d4d4d4;padding:0;font-size:13px;line-height:1.6;font-family:'JetBrains Mono','Menlo',monospace;">${highlighted}</code></pre>`;
+    };
+
+    renderer.codespan = function(text) {
+      if (typeof text === 'object') text = text.text || '';
+      const t = T();
+      return `<code style="font-family:'JetBrains Mono','Menlo',monospace;background:${t.codeBg};color:${t.codeColor};padding:2px 6px;border-radius:3px;font-size:13px;">${text}</code>`;
+    };
+
+    // Image index counter
+    let imageIndex = 0;
+
+    renderer.image = function(href, title, text) {
+      if (typeof href === 'object') {
+        text = href.text || '';
+        title = href.title || '';
+        href = href.href || '';
+      }
+      imageIndex++;
+      let imgName = text || '';
+      if (!imgName) {
+        try {
+          const urlPath = new URL(href).pathname;
+          imgName = decodeURIComponent(urlPath.split('/').pop()) || href;
+        } catch {
+          imgName = href.split('/').pop() || href;
+        }
+      }
+      if (imgName.length > 50) {
+        imgName = imgName.substring(0, 47) + '...';
+      }
+      return `<div style="margin:20px 0;padding:20px 16px;background:#faf8f2;border:2px dashed #c9a84c;border-radius:8px;text-align:center;color:#999;font-size:13px;line-height:1.8;"><span style="font-size:28px;display:block;margin-bottom:6px;">🖼</span><span style="font-weight:700;color:#8a7550;font-size:14px;word-break:break-all;">图片 ${imageIndex}：${imgName}</span><div style="font-size:12px;color:#bba86e;margin-top:4px;">请在公众号编辑器中手动插入此图片</div></div>`;
+    };
+
+    renderer.blockquote = function(quote) {
+      if (typeof quote === 'object') quote = quote.text || '';
+      const t = T();
+      return `<blockquote style="margin:16px 0;padding:12px 16px;border-left:3px solid ${t.bqBorder};background:${t.bqBg};color:#666;font-size:14px;border-radius:0 4px 4px 0;">${quote}</blockquote>`;
+    };
+
+    renderer.list = function(body, ordered) {
+      if (typeof body === 'object') {
+        ordered = body.ordered;
+        body = body.body || '';
+      }
+      const tag = ordered ? 'ol' : 'ul';
+      return `<${tag} style="margin:12px 0;padding-left:24px;">${body}</${tag}>`;
+    };
+
+    renderer.listitem = function(text) {
+      if (typeof text === 'object') text = text.text || '';
+      return `<li style="margin:4px 0;line-height:1.9;">${text}</li>`;
+    };
+
+    renderer.table = function(header, body) {
+      if (typeof header === 'object') {
+        body = header.body || '';
+        header = header.header || '';
+      }
+      return `<table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;"><thead>${header}</thead><tbody>${body}</tbody></table>`;
+    };
+
+    renderer.tablerow = function(content) {
+      if (typeof content === 'object') content = content.text || '';
+      return `<tr>${content}</tr>`;
+    };
+
+    renderer.tablecell = function(content, flags) {
+      if (typeof content === 'object') {
+        flags = content.flags || {};
+        content = content.text || '';
+      }
+      const tag = flags.header ? 'th' : 'td';
+      const align = flags.align ? `text-align:${flags.align};` : '';
+      const bg = flags.header ? 'background:#faf8f2;font-weight:700;' : '';
+      return `<${tag} style="${bg}${align}padding:${flags.header ? '10px' : '8px'} 12px;border:1px solid #e5e0d5;">${content}</${tag}>`;
+    };
+
+    renderer.hr = function() {
+      const t = T();
+      return `<hr style="border:none;border-top:1px solid ${t.h2Border};margin:28px 0;">`;
+    };
+
+    marked.setOptions({
+      renderer,
+      gfm: true,
+      breaks: true,
+    });
+
+    function renderMarkdown(md) {
+      linkIndex = 0;
+      linkMap.clear();
+      imageIndex = 0;
+
+      const html = marked.parse(md);
+      preview.innerHTML = html;
+
+      // Build footnotes with inline styles
+      const t = T();
+      if (linkMap.size > 0) {
+        let fnHtml = '';
+        for (const [idx, { href, text }] of linkMap) {
+          fnHtml += `<p style="margin:4px 0;line-height:1.6;">[${idx}] ${text}: <a href="${href}" style="color:${t.linkColor};">${href}</a></p>`;
+        }
+        footnotesEl.innerHTML = fnHtml;
+        footnotesEl.style.display = 'block';
+      } else {
+        footnotesEl.innerHTML = '';
+        footnotesEl.style.display = 'none';
+      }
+    }
+
+    function updateCharCount() {
+      const text = editor.value;
+      // Chinese char count
+      const count = text.replace(/\s/g, '').length;
+      charCount.textContent = `${count} 字`;
+    }
+
+    // Live render
+    editor.addEventListener('input', () => {
+      renderMarkdown(editor.value);
+      updateCharCount();
+    });
+
+    // Theme switching — re-render with new inline theme colors
+    themeSelect.addEventListener('change', () => {
+      currentTheme = themeSelect.value;
+      renderMarkdown(editor.value);
+    });
+
+    // Copy
+    function copyToClipboard() {
+      // All styles are already inline in the rendered HTML
+      // Just wrap with article-level container + footnotes
+      const articleWrap = `<div style="font-family:'Noto Serif SC',Georgia,serif;font-size:15px;line-height:2;color:#333;word-break:break-word;padding:0;margin:0;">${preview.innerHTML}<div style="margin-top:32px;padding-top:16px;border-top:1px solid #e5e0d5;font-size:13px;color:#999;">${footnotesEl.innerHTML}</div></div>`;
+      
+      const blob = new Blob([articleWrap], { type: 'text/html' });
+      const textBlob = new Blob([preview.innerText], { type: 'text/plain' });
+      
+      navigator.clipboard.write([
+        new ClipboardItem({
+          'text/html': blob,
+          'text/plain': textBlob,
+        })
+      ]).then(() => {
+        showToast();
+        btnCopy.textContent = '已复制 ✓';
+        btnCopy.classList.add('copied');
+        setTimeout(() => {
+          btnCopy.textContent = '复制到公众号';
+          btnCopy.classList.remove('copied');
+        }, 2000);
+      }).catch(() => {
+        // Fallback: select + copy
+        const range = document.createRange();
+        range.selectNodeContents(previewContainer);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        document.execCommand('copy');
+        sel.removeAllRanges();
+        showToast();
+      });
+    }
+
+    function showToast() {
+      const toast = document.getElementById('toast');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    // Tab support in editor
+    editor.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        editor.value = editor.value.substring(0, start) + '  ' + editor.value.substring(end);
+        editor.selectionStart = editor.selectionEnd = start + 2;
+        renderMarkdown(editor.value);
+      }
+    });
+
+    // Init — wait for hljs before first render
+    waitForHljs(() => {
+      editor.value = defaultContent;
+      renderMarkdown(defaultContent);
+      updateCharCount();
+    });
+  </script>
+</body>
+</html>

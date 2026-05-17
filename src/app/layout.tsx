@@ -29,11 +29,14 @@ export default function RootLayout({
                 { href: "/", label: "仪表盘", icon: "📊" },
                 { href: "/create", label: "新建内容", icon: "✨" },
                 { href: "/history", label: "历史记录", icon: "📁" },
+                { href: "/toolbox/", label: "工具箱", icon: "🧰", external: true },
                 { href: "/settings", label: "配置中心", icon: "⚙️" },
               ].map((item) => (
                 <a
                   key={item.href}
                   href={item.href}
+                  target={item.external ? "_blank" : undefined}
+                  rel={item.external ? "noopener noreferrer" : undefined}
                   className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
                 >
                   <span>{item.icon}</span>
