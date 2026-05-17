@@ -5,7 +5,6 @@ import type { ParsedDailyReport, ParsedTopic, TopicSummaryItem } from "../types"
  * Uses rule-based splitting + regex extraction (fast, no LLM needed for this format).
  */
 export function parseDailyTopics(markdown: string): ParsedDailyReport {
-  // Extract date from title line like "# 职场健康热点日报 | 2026-05-17（周日）"
   const dateMatch = markdown.match(/#\s+.*\|\s*(\d{4}-\d{2}-\d{2})/);
   const date = dateMatch?.[1] ?? new Date().toISOString().slice(0, 10);
 
