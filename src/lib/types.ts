@@ -47,3 +47,21 @@ export interface XiaohongshuOutput {
   imagePrompts: string[];
   tags: string[];
 }
+
+// 图片生成相关类型
+export interface GeneratedImage {
+  prompt: string;
+  url: string;       // 图片 URL 或 base64 data URI
+  width: number;
+  height: number;
+  model: string;
+  createdAt: string;
+}
+
+export interface ImageGenerateConfig {
+  provider: string;
+  model: string;
+  apiKey: string;
+  baseUrl: string;
+  size: string;      // e.g. "1024x1024"
+}

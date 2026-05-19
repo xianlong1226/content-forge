@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import type { GeneratedImage } from "@/lib/types";
 
 interface ParsedTopic {
   id: string;
@@ -21,6 +22,27 @@ interface ParseResult {
 
 type Phase = "upload" | "select" | "generate" | "review" | "export";
 type Platform = "wechat" | "xiaohongshu";
+
+function extractImagePrompts(raw: string | null, platform: string): string[] {
+  if (!raw) return [];
+  if (platform === "xiaohongshu") {
+    const match = raw.match(/---IMAGE_PROMPTS---\s*\n([\s\S]*?)$/);
+    if (match) {
+      return match[1]
+        .split("\n")
+        .map((l) => l.replace(/^\d+[.、)）]\s*/, "").replace(/^[-*]\s*/, "").trim())
+        .filter(Boolean);
+    }
+  }
+  if (platform === "wechat") {
+    const match = raw.match(/---COVER_IMAGE_PROMPT---\s*\n([\s\S]*?)$/);
+    if (match) {
+      const text = match[1].trim();
+      return text ? [text] : [];
+    }
+  }
+  return [];
+}
 
 function CreatePageInner() {
   const searchParams = useSearchParams();
@@ -70,6 +92,14 @@ function CreatePageInner() {
 
   // Export state
   const [exportData, setExportData] = useState<any[]>([]);
+
+  // Image generation state (export phase)
+  const [contentImages, setContentImages] = useState<Record<string, GeneratedImage[]>>({});
+  const [genImgIdx, setGenImgIdx] = useState<number | null>(null);
+  const [genImgAll, setGenImgAll] = useState(false);
+  const [imgError, setImgError] = useState<string | null>(null);
+  const [customImgPrompt, setCustomImgPrompt] = useState<Record<string, string>>({});
+  const [imgSize, setImgSize] = useState("1024x1024");
 
   async function handleParse() {
     setLoading(true);
@@ -272,6 +302,64 @@ function CreatePageInner() {
 
     setExportData(results);
     setPhase("export");
+  }
+
+  async function handleGenImage(contentId: string, prompt: string, index: number) {
+    setGenImgIdx(index);
+    setImgError(null);
+    try {
+      const res = await fetch("/api/generate-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contentId, prompt, size: imgSize }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || "生成失败");
+      setContentImages((prev) => ({ ...prev, [contentId]: result.images }));
+    } catch (err: any) {
+      setImgError(err.message);
+    } finally {
+      setGenImgIdx(null);
+    }
+  }
+
+  async function handleGenAllImages(contentId: string, prompts: string[]) {
+    if (prompts.length === 0) return;
+    setGenImgAll(true);
+    setImgError(null);
+    for (let i = 0; i < prompts.length; i++) {
+      setGenImgIdx(i);
+      try {
+        const res = await fetch("/api/generate-image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contentId, prompt: prompts[i], size: imgSize }),
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || "生成失败");
+        setContentImages((prev) => ({ ...prev, [contentId]: result.images }));
+      } catch (err: any) {
+        setImgError(`第 ${i + 1} 张图生成失败: ${err.message}`);
+        break;
+      }
+    }
+    setGenImgIdx(null);
+    setGenImgAll(false);
+  }
+
+  async function handleDeleteImage(contentId: string, imageIndex: number) {
+    try {
+      const res = await fetch("/api/generate-image", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contentId, imageIndex }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || "删除失败");
+      setContentImages((prev) => ({ ...prev, [contentId]: result.images }));
+    } catch (err: any) {
+      setImgError(err.message);
+    }
   }
 
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -892,6 +980,126 @@ function CreatePageInner() {
                     </>
                   )}
                 </div>
+                {(() => {
+                  const cid = data.platform === "wechat" ? wechatContentId : xhsContentId;
+                  const raw = data.platform === "wechat" ? wechatText : xhsText;
+                  if (!cid) return null;
+                  const imgPrompts = extractImagePrompts(raw, data.platform);
+                  const imgs = contentImages[cid] || [];
+                  return (
+                    <div className="border-t border-gray-100 p-4 pt-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-gray-500">🖼️ 配图生成</span>
+                        <div className="flex items-center gap-2">
+                          <select
+                            value={imgSize}
+                            onChange={(e) => setImgSize(e.target.value)}
+                            className="text-xs px-2 py-1 border border-gray-200 rounded bg-white text-gray-600 focus:outline-none focus:ring-1 focus:ring-green-500"
+                          >
+                            <option value="1024x1024">1:1 方形</option>
+                            <option value="1280x720">16:9 横版封面</option>
+                            <option value="720x1280">9:16 竖版小红书</option>
+                            <option value="1024x576">16:9 宽屏</option>
+                            <option value="576x1024">9:16 窄竖版</option>
+                          </select>
+                          {imgPrompts.length > 0 && (
+                            <button
+                              onClick={() => handleGenAllImages(cid, imgPrompts)}
+                              disabled={genImgAll || genImgIdx !== null}
+                              className="text-xs px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {genImgAll ? "生成中..." : "一键生成全部"}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      {imgPrompts.map((prompt, pi) => {
+                        const related = imgs.filter((img) => img.prompt === prompt);
+                        return (
+                          <div key={pi} className="bg-gray-50 rounded p-2">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <span className="text-[10px] text-gray-400 block">
+                                  {data.platform === "wechat" ? "封面图提示词" : `配图 ${pi + 1}`}
+                                </span>
+                                <p className="text-xs text-gray-600 break-words">{prompt}</p>
+                              </div>
+                              <button
+                                onClick={() => handleGenImage(cid, prompt, pi)}
+                                disabled={genImgIdx !== null}
+                                className="shrink-0 text-xs px-2 py-1 bg-white border border-gray-200 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {genImgIdx === pi ? "⏳" : "🎨 生成"}
+                              </button>
+                            </div>
+                            {related.length > 0 && (
+                              <div className="mt-1.5 flex flex-wrap gap-1">
+                                {related.map((img, j) => {
+                                  const gIdx = imgs.indexOf(img);
+                                  return (
+                                    <div key={j} className="relative group">
+                                      <img src={img.url} alt="" className="w-20 h-20 object-cover rounded border" />
+                                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded flex items-center justify-center gap-1">
+                                        <a href={img.url} download={`image-${gIdx}.png`} className="text-[10px] text-white bg-white/20 px-1.5 py-0.5 rounded hover:bg-white/40">下载</a>
+                                        <button onClick={() => handleDeleteImage(cid, gIdx)} className="text-[10px] text-white bg-red-500/60 px-1.5 py-0.5 rounded hover:bg-red-500/80">删除</button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                      <div className="flex gap-1.5">
+                        <input
+                          type="text"
+                          value={customImgPrompt[cid] || ""}
+                          onChange={(e) => setCustomImgPrompt((prev) => ({ ...prev, [cid]: e.target.value }))}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && (customImgPrompt[cid] || "").trim()) {
+                              handleGenImage(cid, (customImgPrompt[cid] || "").trim(), -1);
+                              setCustomImgPrompt((prev) => ({ ...prev, [cid]: "" }));
+                            }
+                          }}
+                          placeholder="自定义图片描述..."
+                          className="flex-1 text-xs px-2 py-1.5 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+                        />
+                        <button
+                          onClick={() => {
+                            if ((customImgPrompt[cid] || "").trim()) {
+                              handleGenImage(cid, (customImgPrompt[cid] || "").trim(), -1);
+                              setCustomImgPrompt((prev) => ({ ...prev, [cid]: "" }));
+                            }
+                          }}
+                          disabled={!(customImgPrompt[cid] || "").trim() || genImgIdx !== null}
+                          className="text-xs px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {genImgIdx === -1 ? "..." : "生成"}
+                        </button>
+                      </div>
+                      {imgError && (
+                        <p className="text-xs text-red-500">{imgError}</p>
+                      )}
+                      {imgs.length > 0 && (
+                        <div>
+                          <span className="text-[10px] text-gray-400">已生成 {imgs.length} 张配图</span>
+                          <div className="grid grid-cols-3 gap-1.5 mt-1">
+                            {imgs.map((img, gi) => (
+                              <div key={gi} className="relative group">
+                                <img src={img.url} alt="" className="w-full aspect-square object-cover rounded border" />
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded flex items-center justify-center gap-1">
+                                  <a href={img.url} download={`image-${gi}.png`} className="text-[10px] text-white bg-white/20 px-1 rounded hover:bg-white/40">下载</a>
+                                  <button onClick={() => handleDeleteImage(cid, gi)} className="text-[10px] text-white bg-red-500/60 px-1 rounded hover:bg-red-500/80">删</button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             ))}
           </div>

@@ -47,6 +47,7 @@ export function initDB() {
       style TEXT NOT NULL DEFAULT 'professional-friendly',
       raw_markdown TEXT,
       rendered_html TEXT,
+      images TEXT,
       status TEXT NOT NULL DEFAULT 'draft',
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL

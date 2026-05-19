@@ -12,12 +12,18 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   xhs_style: "casual",
   default_audience: "目标受众",
   max_topics: "2",
+  image_provider: "siliconflow",
+  image_model: "black-forest-labs/FLUX.1-schnell",
+  image_api_key: "",
+  image_base_url: "https://api.siliconflow.cn/v1",
+  image_size: "1024x1024",
 };
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [saved, setSaved] = useState(false);
   const [hasApiKey, setHasApiKey] = useState(true);
+  const [hasImageApiKey, setHasImageApiKey] = useState(true);
 
   useEffect(() => {
     fetch("/api/settings")
@@ -26,6 +32,7 @@ export default function SettingsPage() {
         const merged = { ...DEFAULT_SETTINGS, ...data };
         setSettings(merged);
         setHasApiKey(!!data.llm_api_key);
+        setHasImageApiKey(!!data.image_api_key);
       })
       .catch(() => {});
   }, []);
@@ -38,6 +45,7 @@ export default function SettingsPage() {
     });
     setSaved(true);
     setHasApiKey(!!settings.llm_api_key);
+    setHasImageApiKey(!!settings.image_api_key);
     setTimeout(() => setSaved(false), 2000);
   }
 
@@ -191,6 +199,87 @@ export default function SettingsPage() {
               onChange={(e) => setSettings({ ...settings, max_topics: e.target.value })}
               className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
             />
+          </div>
+        </div>
+      </div>
+
+      {/* Image Generation Config */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+        <h2 className="font-bold text-lg mb-4">🖼️ 图片生成配置</h2>
+        {!hasImageApiKey && (
+          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2 text-sm">
+            <span>⚠️</span>
+            <span className="text-amber-700">图片 API Key 未配置，生成配图功能不可用</span>
+          </div>
+        )}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">服务商</label>
+            <select
+              value={settings.image_provider}
+              onChange={(e) => {
+                const provider = e.target.value;
+                const updates: Record<string, string> = { image_provider: provider };
+                if (provider === "siliconflow") {
+                  updates.image_model = "black-forest-labs/FLUX.1-schnell";
+                  updates.image_base_url = "https://api.siliconflow.cn/v1";
+                } else if (provider === "openai") {
+                  updates.image_model = "dall-e-3";
+                  updates.image_base_url = "https://api.openai.com/v1";
+                }
+                setSettings({ ...settings, ...updates });
+              }}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              <option value="siliconflow">Silicon Flow</option>
+              <option value="openai">OpenAI (DALL-E)</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Model</label>
+            <input
+              type="text"
+              value={settings.image_model}
+              onChange={(e) => setSettings({ ...settings, image_model: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">API Key</label>
+            <input
+              type="password"
+              value={settings.image_api_key}
+              onChange={(e) => setSettings({ ...settings, image_api_key: e.target.value })}
+              placeholder="Silicon Flow / OpenAI API Key"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Base URL</label>
+            <input
+              type="text"
+              value={settings.image_base_url}
+              onChange={(e) => setSettings({ ...settings, image_base_url: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">图片尺寸</label>
+            <select
+              value={settings.image_size}
+              onChange={(e) => setSettings({ ...settings, image_size: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              <option value="1024x1024">1024 × 1024（方形）</option>
+              <option value="1280x720">1280 × 720（横版封面）</option>
+              <option value="720x1280">720 × 1280（竖版小红书）</option>
+              <option value="1024x576">1024 × 576（宽屏横版）</option>
+              <option value="576x1024">576 × 1024（窄竖版）</option>
+            </select>
           </div>
         </div>
       </div>

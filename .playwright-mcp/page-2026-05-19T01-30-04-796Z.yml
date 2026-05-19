@@ -1,0 +1,85 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - heading "🔮 ContentForge" [level=1] [ref=e5]:
+          - text: 🔮
+          - generic [ref=e6]: ContentForge
+        - paragraph [ref=e7]: 智能内容工厂
+      - navigation [ref=e8]:
+        - link "📊 仪表盘" [ref=e9] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e10]: 📊
+          - generic [ref=e11]: 仪表盘
+        - link "✨ 新建内容" [ref=e12] [cursor=pointer]:
+          - /url: /create
+          - generic [ref=e13]: ✨
+          - generic [ref=e14]: 新建内容
+        - link "📁 历史记录" [ref=e15] [cursor=pointer]:
+          - /url: /history
+          - generic [ref=e16]: 📁
+          - generic [ref=e17]: 历史记录
+        - link "🧰 工具箱" [ref=e18] [cursor=pointer]:
+          - /url: /toolbox/
+          - generic [ref=e19]: 🧰
+          - generic [ref=e20]: 工具箱
+        - link "⚙️ 配置中心" [ref=e21] [cursor=pointer]:
+          - /url: /settings
+          - generic [ref=e22]: ⚙️
+          - generic [ref=e23]: 配置中心
+      - generic [ref=e24]: v0.1.0 · Powered by AI
+    - main [ref=e25]:
+      - generic [ref=e26]:
+        - link "← 返回历史记录" [ref=e27] [cursor=pointer]:
+          - /url: /history
+        - generic [ref=e28]:
+          - generic [ref=e29]:
+            - generic [ref=e30]:
+              - generic [ref=e31]: 小红书
+              - generic [ref=e32]: 已导出
+            - heading "🚨久坐=慢性自杀？2025职场健康白皮书敲警钟！" [level=1] [ref=e33]
+            - generic [ref=e34]:
+              - generic [ref=e35]: "创建: 2026/05/19 09:04"
+              - generic [ref=e36]: "更新: 2026/05/19 09:08"
+          - generic [ref=e37]:
+            - heading "正文内容" [level=3] [ref=e38]
+            - generic [ref=e39]: 宝子们，别再把“久坐”当小事了！最新发布的《2025职场久坐健康白皮书》直接把它列为职场第一杀手，比熬夜、暴饮暴食更可怕！💥 📊 数据太扎心： - 国家卫健委报告：职场人亚健康率高达76%，过劳猝死案例年均增长12%😱 - 久坐被WHO列为30种可预防致癌原因之一，危害堪比吸烟🚬 - 2025年“健康体重管理行动”已升级为国家战略，连国家都出手了！ ⚠️ 久坐的危害链： 代谢紊乱→腰肌劳损→心血管负担→系统性风险…每一步都在透支身体！ 💡 给打工人的自救指南： 1️⃣ 每坐45分钟，起身拉伸3分钟（设闹钟！） 2️⃣ 办公桌备个升降台，站坐交替 3️⃣ 每天抽10分钟做肩颈放松操（收藏这篇，明天就练！） 📝 评论区聊聊：你每天坐多久？有没有腰酸背痛的“工伤”？👇
+          - generic [ref=e40]:
+            - heading "排版预览" [level=3] [ref=e41]
+            - generic [ref=e42]: "🚨久坐=慢性自杀？2025职场健… 宝子们，别再把“久坐”当小事了！最新发布的《2025职场久坐健康白皮书》直接把它列为职场第一杀手，比熬夜、暴饮暴食更可怕！💥 📊 数据太扎心： ✅ 国家卫健委报告：职场人亚健康率高达76%，过劳猝死案例年均增长12%😱 💡 久坐被WHO列为30种可预防致癌原因之一，危害堪比吸烟🚬 📌 2025年“健康体重管理行动”已升级为国家战略，连国家都出手了！ ⚠️ 久坐的危害链： 代谢紊乱→腰肌劳损→心血管负担→系统性风险…每一步都在透支身体！ 💡 给打工人的自救指南： 1️⃣ 每坐45分钟，起身拉伸3分钟（设闹钟！） 2️⃣ 办公桌备个升降台，站坐交替 3️⃣ 每天抽10分钟做肩颈放松操（收藏这篇，明天就练！） 📝 评论区聊聊：你每天坐多久？有没有腰酸背痛的“工伤”？👇 #职场健康 #久坐危害 #打工人自救 #健康中国行动 #体重管理 #亚健康 #办公室养生 #人体工学椅 --- 📌 保存收藏，随时查看 💬 评论区说说你的经历"
+          - generic [ref=e43]:
+            - generic [ref=e44]:
+              - heading "🖼️ 配图生成" [level=3] [ref=e45]
+              - button "一键生成全部配图" [ref=e46] [cursor=pointer]
+            - generic [ref=e47]:
+              - generic [ref=e49]:
+                - generic [ref=e50]:
+                  - generic [ref=e51]: 配图 1
+                  - paragraph [ref=e52]: 办公室场景中，一位年轻白领坐在电脑前，背后用红色警示线标注“久坐危害链”，桌上放有健康白皮书
+                - button "🎨 生成" [ref=e53] [cursor=pointer]
+              - generic [ref=e55]:
+                - generic [ref=e56]:
+                  - generic [ref=e57]: 配图 2
+                  - paragraph [ref=e58]: 对比图：左侧是久坐导致的驼背、腰椎疼痛的卡通形象，右侧是站坐交替办公的活力小人
+                - button "🎨 生成" [ref=e59] [cursor=pointer]
+              - generic [ref=e61]:
+                - generic [ref=e62]:
+                  - generic [ref=e63]: 配图 3
+                  - paragraph [ref=e64]: 数据信息图：国家卫健委报告中的“76%亚健康率”和“年均增长12%”用立体数字和动态箭头展示
+                - button "🎨 生成" [ref=e65] [cursor=pointer]
+              - generic [ref=e67]:
+                - generic [ref=e68]:
+                  - generic [ref=e69]: 配图 4
+                  - paragraph [ref=e70]: 温馨插画：办公桌旁放有升降台、水杯、拉伸小贴士卡片，旁边标注“每45分钟动一动”
+                - button "🎨 生成" [ref=e71] [cursor=pointer]
+              - generic [ref=e73]:
+                - generic [ref=e74]:
+                  - generic [ref=e75]: 配图 5
+                  - paragraph [ref=e76]: 小红书风格封面：白皮书封面特写，背景虚化，标题大字“久坐=慢性自杀？”加荧光色警示符号
+                - button "🎨 生成" [ref=e77] [cursor=pointer]
+            - generic [ref=e78]:
+              - textbox "输入自定义图片描述..." [ref=e79]
+              - button "生成" [disabled] [ref=e80]
+  - button "Open Next.js Dev Tools" [ref=e86] [cursor=pointer]:
+    - img [ref=e87]
+  - alert [ref=e90]

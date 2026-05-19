@@ -1,0 +1,45 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - heading "🔮 ContentForge" [level=1] [ref=e5]:
+          - text: 🔮
+          - generic [ref=e6]: ContentForge
+        - paragraph [ref=e7]: 智能内容工厂
+      - navigation [ref=e8]:
+        - link "📊 仪表盘" [ref=e9] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e10]: 📊
+          - generic [ref=e11]: 仪表盘
+        - link "✨ 新建内容" [ref=e12] [cursor=pointer]:
+          - /url: /create
+          - generic [ref=e13]: ✨
+          - generic [ref=e14]: 新建内容
+        - link "📁 历史记录" [ref=e15] [cursor=pointer]:
+          - /url: /history
+          - generic [ref=e16]: 📁
+          - generic [ref=e17]: 历史记录
+        - link "🧰 工具箱" [ref=e18] [cursor=pointer]:
+          - /url: /toolbox/
+          - generic [ref=e19]: 🧰
+          - generic [ref=e20]: 工具箱
+        - link "⚙️ 配置中心" [ref=e21] [cursor=pointer]:
+          - /url: /settings
+          - generic [ref=e22]: ⚙️
+          - generic [ref=e23]: 配置中心
+      - generic [ref=e24]: v0.1.0 · Powered by AI
+    - main [ref=e25]:
+      - generic [ref=e26]:
+        - heading "上传素材" [level=1] [ref=e27]
+        - paragraph [ref=e28]: 粘贴素材内容或上传 Markdown 文件
+        - generic [ref=e29]:
+          - generic [ref=e30]: 粘贴内容
+          - 'textbox "# 热点素材 | 2026-05-17 ## 🔥 热门话题一：... ### 核心数据 - ..." [ref=e31]':
+            - /placeholder: "# 热点素材 | 2026-05-17\n\n## 🔥 热门话题一：...\n### 核心数据\n- ..."
+        - generic [ref=e32]:
+          - generic [ref=e33]: 或上传文件
+          - button "Choose File" [ref=e34]
+        - button "🔍 解析内容" [ref=e35] [cursor=pointer]
+  - button "Open Next.js Dev Tools" [ref=e41] [cursor=pointer]:
+    - img [ref=e42]
+  - alert [ref=e45]

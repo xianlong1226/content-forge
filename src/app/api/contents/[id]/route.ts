@@ -38,6 +38,7 @@ export async function PUT(
   const updates: Record<string, string> = { updatedAt: new Date().toISOString() };
   if (body.rawMarkdown !== undefined) updates.rawMarkdown = body.rawMarkdown;
   if (body.renderedHtml !== undefined) updates.renderedHtml = body.renderedHtml;
+  if (body.images !== undefined) updates.images = body.images;
 
   await db.update(contents).set(updates).where(eq(contents.id, id));
 

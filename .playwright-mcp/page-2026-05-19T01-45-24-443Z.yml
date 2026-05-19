@@ -1,0 +1,94 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - heading "🔮 ContentForge" [level=1] [ref=e5]:
+          - text: 🔮
+          - generic [ref=e6]: ContentForge
+        - paragraph [ref=e7]: 智能内容工厂
+      - navigation [ref=e8]:
+        - link "📊 仪表盘" [ref=e9] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e10]: 📊
+          - generic [ref=e11]: 仪表盘
+        - link "✨ 新建内容" [ref=e12] [cursor=pointer]:
+          - /url: /create
+          - generic [ref=e13]: ✨
+          - generic [ref=e14]: 新建内容
+        - link "📁 历史记录" [ref=e15] [cursor=pointer]:
+          - /url: /history
+          - generic [ref=e16]: 📁
+          - generic [ref=e17]: 历史记录
+        - link "🧰 工具箱" [ref=e18] [cursor=pointer]:
+          - /url: /toolbox/
+          - generic [ref=e19]: 🧰
+          - generic [ref=e20]: 工具箱
+        - link "⚙️ 配置中心" [ref=e21] [cursor=pointer]:
+          - /url: /settings
+          - generic [ref=e22]: ⚙️
+          - generic [ref=e23]: 配置中心
+      - generic [ref=e24]: v0.1.0 · Powered by AI
+    - main [ref=e25]:
+      - generic [ref=e26]:
+        - heading "历史记录" [level=1] [ref=e27]
+        - generic [ref=e28]:
+          - button "生成内容" [ref=e29] [cursor=pointer]
+          - button "素材" [ref=e30] [cursor=pointer]
+        - generic [ref=e31]:
+          - generic [ref=e32]:
+            - generic [ref=e33]:
+              - generic [ref=e34]:
+                - generic [ref=e35]: 公众号
+                - generic [ref=e36]: 已导出
+              - paragraph [ref=e37]: 久坐到底有多毒？WHO最新数据：和吸烟一个级别
+              - paragraph [ref=e38]: 5月19日 09:41
+            - link "查看" [ref=e39] [cursor=pointer]:
+              - /url: /content/f5253a9b-c1ef-4c2d-bfeb-31e61f5443ec
+          - generic [ref=e40]:
+            - generic [ref=e41]:
+              - generic [ref=e42]:
+                - generic [ref=e43]: 小红书
+                - generic [ref=e44]: 已导出
+              - paragraph [ref=e45]: 🪑久坐比熬夜更伤身？2025职场人必看！
+              - paragraph [ref=e46]: 5月19日 09:18
+            - link "查看" [ref=e47] [cursor=pointer]:
+              - /url: /content/3717bc9b-2e04-43c5-b2f6-d8a99139c792
+          - generic [ref=e48]:
+            - generic [ref=e49]:
+              - generic [ref=e50]:
+                - generic [ref=e51]: 公众号
+                - generic [ref=e52]: 已审查
+              - paragraph [ref=e53]: 每天坐8小时等于抽半包烟？WHO警告：久坐已成职场头号健康杀手
+              - paragraph [ref=e54]: 5月19日 09:10
+            - link "查看" [ref=e55] [cursor=pointer]:
+              - /url: /content/9c840441-ddd7-43ff-9d52-efe967d8cab9
+          - generic [ref=e56]:
+            - generic [ref=e57]:
+              - generic [ref=e58]:
+                - generic [ref=e59]: 小红书
+                - generic [ref=e60]: 已生成
+              - paragraph [ref=e61]: 🪑久坐=慢性自杀？危害堪比吸烟💥
+              - paragraph [ref=e62]: 5月19日 09:10
+            - link "查看" [ref=e63] [cursor=pointer]:
+              - /url: /content/47f54279-0299-47d2-bbf1-d544a81689c2
+          - generic [ref=e64]:
+            - generic [ref=e65]:
+              - generic [ref=e66]:
+                - generic [ref=e67]: 小红书
+                - generic [ref=e68]: 已导出
+              - paragraph [ref=e69]: 🚨久坐=慢性自杀？2025职场健康白皮书敲警钟！
+              - paragraph [ref=e70]: 5月19日 09:08
+            - link "查看" [ref=e71] [cursor=pointer]:
+              - /url: /content/de2cf0d7-b19b-4fb5-b13a-b3dfb75d5f59
+          - generic [ref=e72]:
+            - generic [ref=e73]:
+              - generic [ref=e74]:
+                - generic [ref=e75]: 公众号
+                - generic [ref=e76]: 已导出
+              - paragraph [ref=e77]: 久坐到底有多毒？WHO最新数据：和吸烟一个级别
+              - paragraph [ref=e78]: 5月19日 09:08
+            - link "查看" [ref=e79] [cursor=pointer]:
+              - /url: /content/864592ee-9c81-47f0-b68e-30e8326cb5eb
+  - button "Open Next.js Dev Tools" [ref=e85] [cursor=pointer]:
+    - img [ref=e86]
+  - alert [ref=e89]

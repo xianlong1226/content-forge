@@ -30,6 +30,7 @@ export const contents = sqliteTable("contents", {
   style: text("style").notNull().default("professional-friendly"),
   rawMarkdown: text("raw_markdown"),
   renderedHtml: text("rendered_html"),
+  images: text("images"), // JSON string: GeneratedImage[]
   status: text("status").notNull().default("draft"), // draft | generated | reviewed | exported
   createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
   updatedAt: text("updated_at").notNull().$defaultFn(() => new Date().toISOString()),

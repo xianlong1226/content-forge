@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, use, useCallback } from "react";
+import type { GeneratedImage } from "@/lib/types";
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
   draft: { label: "草稿", color: "bg-gray-100 text-gray-600" },
@@ -22,8 +23,32 @@ function extractTitle(raw: string | null, topicTitle?: string): string {
 
 function extractBody(raw: string | null): string {
   if (!raw) return "";
-  const m = raw.match(/---BODY---\s*\n([\s\S]*?)(?=\n---(?:TAGS|IMAGE_PROMPTS)---|$)/);
+  const m = raw.match(/---BODY---\s*\n([\s\S]*?)(?=\n---(?:TAGS|IMAGE_PROMPTS|COVER_IMAGE_PROMPT)---|$)/);
   return m?.[1]?.trim() || raw;
+}
+
+function extractImagePrompts(raw: string | null, platform: string): string[] {
+  if (!raw) return [];
+
+  if (platform === "xiaohongshu") {
+    const match = raw.match(/---IMAGE_PROMPTS---\s*\n([\s\S]*?)$/);
+    if (match) {
+      return match[1]
+        .split("\n")
+        .map((l) => l.replace(/^\d+[.、)）]\s*/, "").replace(/^[-*]\s*/, "").trim())
+        .filter(Boolean);
+    }
+  }
+
+  if (platform === "wechat") {
+    const match = raw.match(/---COVER_IMAGE_PROMPT---\s*\n([\s\S]*?)$/);
+    if (match) {
+      const text = match[1].trim();
+      return text ? [text] : [];
+    }
+  }
+
+  return [];
 }
 
 function formatDate(iso: string) {
@@ -39,7 +64,14 @@ export default function ContentDetailPage({ params }: { params: Promise<{ id: st
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
+  // Image generation state
+  const [generatingIndex, setGeneratingIndex] = useState<number | null>(null);
+  const [generatingAll, setGeneratingAll] = useState(false);
+  const [customPrompt, setCustomPrompt] = useState("");
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [imgSize, setImgSize] = useState("1024x1024");
+
+  const fetchData = useCallback(() => {
     fetch(`/api/contents/${id}`)
       .then((r) => {
         if (!r.ok) throw new Error("内容不存在");
@@ -49,6 +81,94 @@ export default function ContentDetailPage({ params }: { params: Promise<{ id: st
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  async function handleGenerateImage(prompt: string, index: number) {
+    setGeneratingIndex(index);
+    setImageError(null);
+    try {
+      const res = await fetch("/api/generate-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contentId: id, prompt, size: imgSize }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || "生成失败");
+      // Update local state
+      setData((prev: any) => ({
+        ...prev,
+        images: result.images,
+      }));
+    } catch (err: any) {
+      setImageError(err.message);
+    } finally {
+      setGeneratingIndex(null);
+    }
+  }
+
+  async function handleGenerateCustom() {
+    if (!customPrompt.trim()) return;
+    setGeneratingIndex(-1);
+    setImageError(null);
+    try {
+      const res = await fetch("/api/generate-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contentId: id, prompt: customPrompt.trim(), size: imgSize }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || "生成失败");
+      setData((prev: any) => ({ ...prev, images: result.images }));
+      setCustomPrompt("");
+    } catch (err: any) {
+      setImageError(err.message);
+    } finally {
+      setGeneratingIndex(null);
+    }
+  }
+
+  async function handleGenerateAll() {
+    const prompts = extractImagePrompts(data?.rawMarkdown, data?.platform);
+    if (prompts.length === 0) return;
+    setGeneratingAll(true);
+    setImageError(null);
+    for (let i = 0; i < prompts.length; i++) {
+      setGeneratingIndex(i);
+      try {
+        const res = await fetch("/api/generate-image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contentId: id, prompt: prompts[i], size: imgSize }),
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || "生成失败");
+        setData((prev: any) => ({ ...prev, images: result.images }));
+      } catch (err: any) {
+        setImageError(`第 ${i + 1} 张图生成失败: ${err.message}`);
+        break;
+      }
+    }
+    setGeneratingIndex(null);
+    setGeneratingAll(false);
+  }
+
+  async function handleDeleteImage(imageIndex: number) {
+    try {
+      const res = await fetch("/api/generate-image", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contentId: id, imageIndex }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || "删除失败");
+      setData((prev: any) => ({ ...prev, images: result.images }));
+    } catch (err: any) {
+      setImageError(err.message);
+    }
+  }
 
   if (loading) {
     return <div className="p-8 text-center text-gray-400">加载中...</div>;
@@ -67,6 +187,10 @@ export default function ContentDetailPage({ params }: { params: Promise<{ id: st
   const platform = PLATFORM_MAP[data.platform] || { label: data.platform, color: "bg-gray-50 text-gray-600" };
   const title = extractTitle(data.rawMarkdown, data.topicTitle);
   const body = extractBody(data.rawMarkdown);
+  const imagePrompts = extractImagePrompts(data.rawMarkdown, data.platform);
+  const images: GeneratedImage[] = data.images
+    ? (typeof data.images === "string" ? JSON.parse(data.images) : data.images)
+    : [];
 
   return (
     <div className="p-8 max-w-3xl mx-auto">
@@ -100,7 +224,7 @@ export default function ContentDetailPage({ params }: { params: Promise<{ id: st
 
         {/* Rendered HTML preview */}
         {data.renderedHtml && (
-          <div className="p-6">
+          <div className="p-6 border-b border-gray-100">
             <h3 className="text-sm font-medium text-gray-500 mb-2">排版预览</h3>
             {data.platform === "xiaohongshu" ? (
               <pre className="whitespace-pre-wrap text-sm text-gray-700 font-sans bg-gray-50 p-4 rounded-lg max-h-96 overflow-auto">
@@ -114,6 +238,175 @@ export default function ContentDetailPage({ params }: { params: Promise<{ id: st
             )}
           </div>
         )}
+
+        {/* Image Generation Section */}
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-medium text-gray-500">🖼️ 配图生成</h3>
+            <div className="flex items-center gap-2">
+              <select
+                value={imgSize}
+                onChange={(e) => setImgSize(e.target.value)}
+                className="text-xs px-2 py-1.5 border border-gray-200 rounded-lg bg-white text-gray-600 focus:outline-none focus:ring-1 focus:ring-green-500"
+              >
+                <option value="1024x1024">1:1 方形</option>
+                <option value="1280x720">16:9 横版封面</option>
+                <option value="720x1280">9:16 竖版小红书</option>
+                <option value="1024x576">16:9 宽屏</option>
+                <option value="576x1024">9:16 窄竖版</option>
+              </select>
+              {imagePrompts.length > 0 && (
+                <button
+                  onClick={handleGenerateAll}
+                  disabled={generatingAll || generatingIndex !== null}
+                  className="text-xs px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {generatingAll ? "生成中..." : "一键生成全部配图"}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Image Prompts */}
+          {imagePrompts.length > 0 && (
+            <div className="space-y-3 mb-4">
+              {imagePrompts.map((prompt, i) => {
+                const relatedImages = images.filter((img) => img.prompt === prompt);
+                return (
+                  <div key={i} className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <span className="text-xs text-gray-400 block mb-1">
+                          {data.platform === "wechat" ? "封面图提示词" : `配图 ${i + 1}`}
+                        </span>
+                        <p className="text-sm text-gray-700 break-words">{prompt}</p>
+                      </div>
+                      <button
+                        onClick={() => handleGenerateImage(prompt, i)}
+                        disabled={generatingIndex !== null}
+                        className="shrink-0 text-xs px-3 py-1.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                      >
+                        {generatingIndex === i ? (
+                          <>
+                            <span className="animate-spin">⏳</span> 生成中
+                          </>
+                        ) : (
+                          "🎨 生成"
+                        )}
+                      </button>
+                    </div>
+                    {/* Show generated images for this prompt */}
+                    {relatedImages.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {relatedImages.map((img, j) => {
+                          const globalIdx = images.indexOf(img);
+                          return (
+                            <div key={j} className="relative group">
+                              <img
+                                src={img.url}
+                                alt={img.prompt}
+                                className="w-32 h-32 object-cover rounded-lg border border-gray-200"
+                              />
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
+                                <a
+                                  href={img.url}
+                                  download={`image-${globalIdx}.png`}
+                                  className="text-xs text-white bg-white/20 px-2 py-1 rounded hover:bg-white/40"
+                                >
+                                  下载
+                                </a>
+                                <button
+                                  onClick={() => handleDeleteImage(globalIdx)}
+                                  className="text-xs text-white bg-red-500/60 px-2 py-1 rounded hover:bg-red-500/80"
+                                >
+                                  删除
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Custom prompt input */}
+          <div className="flex gap-2 mb-4">
+            <input
+              type="text"
+              value={customPrompt}
+              onChange={(e) => setCustomPrompt(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleGenerateCustom()}
+              placeholder="输入自定义图片描述..."
+              className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+            <button
+              onClick={handleGenerateCustom}
+              disabled={!customPrompt.trim() || generatingIndex !== null}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {generatingIndex === -1 ? "生成中..." : "生成"}
+            </button>
+          </div>
+
+          {/* Error display */}
+          {imageError && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 mb-4">
+              {imageError}
+            </div>
+          )}
+
+          {/* All generated images gallery */}
+          {images.length > 0 && (
+            <div>
+              <h4 className="text-xs font-medium text-gray-400 mb-2">
+                已生成 {images.length} 张配图
+              </h4>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {images.map((img, i) => (
+                  <div key={i} className="relative group">
+                    <img
+                      src={img.url}
+                      alt={img.prompt}
+                      className="w-full aspect-square object-cover rounded-lg border border-gray-200"
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex flex-col items-center justify-center gap-1 p-2">
+                      <p className="text-xs text-white text-center line-clamp-2">{img.prompt}</p>
+                      <div className="flex gap-1">
+                        <a
+                          href={img.url}
+                          download={`image-${i}.png`}
+                          className="text-xs text-white bg-white/20 px-2 py-1 rounded hover:bg-white/40"
+                        >
+                          下载
+                        </a>
+                        <button
+                          onClick={() => handleDeleteImage(i)}
+                          className="text-xs text-white bg-red-500/60 px-2 py-1 rounded hover:bg-red-500/80"
+                        >
+                          删除
+                        </button>
+                      </div>
+                    </div>
+                    <div className="absolute top-1 right-1 text-[10px] bg-black/50 text-white px-1.5 py-0.5 rounded">
+                      {img.model.split("/").pop()}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* No prompts hint */}
+          {imagePrompts.length === 0 && images.length === 0 && (
+            <p className="text-sm text-gray-400">
+              暂无图片提示词。可在上方输入自定义描述生成配图，或重新生成文章以自动提取提示词。
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

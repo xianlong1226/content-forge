@@ -1,0 +1,28 @@
+[     112ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3456/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[     123ms] [LOG] [HMR] connected @ http://localhost:3456/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[  409435ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3456/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[  409475ms] [LOG] [Fast Refresh] done in 91ms @ http://localhost:3456/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[  423750ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3456/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[  423793ms] [LOG] [Fast Refresh] done in 18ms @ http://localhost:3456/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[  437429ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3456/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[  437471ms] [LOG] [Fast Refresh] done in 20ms @ http://localhost:3456/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[  454118ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3456/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[  454163ms] [LOG] [Fast Refresh] done in 20ms @ http://localhost:3456/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[  497766ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3456/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[  497788ms] [LOG] [Fast Refresh] done in 61ms @ http://localhost:3456/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[  515301ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3456/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[  515323ms] [LOG] [Fast Refresh] done in 30ms @ http://localhost:3456/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[  553774ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3456/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[  553795ms] [LOG] [Fast Refresh] done in 33ms @ http://localhost:3456/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[  667523ms] [ERROR] WebSocket connection to 'ws://localhost:3456/_next/webpack-hmr?id=c1J7VARo-26MtKXmziAya' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3456/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13322
+[  668524ms] [ERROR] WebSocket connection to 'ws://localhost:3456/_next/webpack-hmr?id=c1J7VARo-26MtKXmziAya' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3456/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13322
+[  669528ms] [LOG] [HMR] connected @ http://localhost:3456/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[  669763ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3456/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[  669773ms] [LOG] [HMR] connected @ http://localhost:3456/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[ 1927641ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3456/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[ 1927776ms] [LOG] [Fast Refresh] done in 211ms @ http://localhost:3456/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[ 1946957ms] [ERROR] WebSocket connection to 'ws://localhost:3456/_next/webpack-hmr?id=B-dafNyoIaf-lWQoYZ1He' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3456/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13322
+[ 1947959ms] [ERROR] WebSocket connection to 'ws://localhost:3456/_next/webpack-hmr?id=B-dafNyoIaf-lWQoYZ1He' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3456/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13322
+[ 1948963ms] [LOG] [HMR] connected @ http://localhost:3456/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[ 1949209ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3456/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[ 1949218ms] [LOG] [HMR] connected @ http://localhost:3456/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477

@@ -74,7 +74,9 @@ ${custom ? `额外要求：${custom}` : ""}
 ---TITLE---
 （标题）
 ---BODY---
-（正文，用标准的Markdown格式）`;
+（正文，用标准的Markdown格式）
+---COVER_IMAGE_PROMPT---
+（封面配图的画面建议：描述一个适合公众号封面的视觉场景，要有视觉冲击力，与文章主题相关，风格偏商务简约）`;
 }
 
 function buildXiaohongshuPrompt(
