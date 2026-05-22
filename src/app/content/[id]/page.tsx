@@ -70,6 +70,7 @@ export default function ContentDetailPage({ params }: { params: Promise<{ id: st
   const [customPrompt, setCustomPrompt] = useState("");
   const [imageError, setImageError] = useState<string | null>(null);
   const [imgSize, setImgSize] = useState("1024x1024");
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   const fetchData = useCallback(() => {
     fetch(`/api/contents/${id}`)
@@ -85,6 +86,27 @@ export default function ContentDetailPage({ params }: { params: Promise<{ id: st
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  async function copyToClipboard(htmlContent: string, plainText: string, key: string) {
+    try {
+      const htmlBlob = new Blob([htmlContent], { type: "text/html" });
+      const textBlob = new Blob([plainText], { type: "text/plain" });
+      await navigator.clipboard.write([
+        new ClipboardItem({ "text/html": htmlBlob, "text/plain": textBlob }),
+      ]);
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 2000);
+    } catch {
+      const textarea = document.createElement("textarea");
+      textarea.value = plainText;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 2000);
+    }
+  }
 
   async function handleGenerateImage(prompt: string, index: number) {
     setGeneratingIndex(index);
@@ -210,6 +232,28 @@ export default function ContentDetailPage({ params }: { params: Promise<{ id: st
             <span>创建: {formatDate(data.createdAt)}</span>
             <span>更新: {formatDate(data.updatedAt)}</span>
           </div>
+          {data.renderedHtml && (
+            <button
+              onClick={() => {
+                if (data.platform === "wechat") {
+                  copyToClipboard(data.renderedHtml, body, "copy-content");
+                } else {
+                  copyToClipboard(data.renderedHtml, data.renderedHtml, "copy-content");
+                }
+              }}
+              className={`mt-3 w-full py-2 text-sm rounded-lg transition-colors font-medium ${
+                data.platform === "wechat"
+                  ? "bg-green-600 text-white hover:bg-green-700"
+                  : "bg-red-500 text-white hover:bg-red-600"
+              }`}
+            >
+              {copiedKey === "copy-content"
+                ? "✅ 已复制！粘贴到编辑器即可"
+                : data.platform === "wechat"
+                  ? "📋 复制排版内容（粘贴到公众号编辑器）"
+                  : "📋 复制全部内容（粘贴到小红书）"}
+            </button>
+          )}
         </div>
 
         {/* Raw markdown content */}
