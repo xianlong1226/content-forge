@@ -1,97 +1,36 @@
 import type { ImageGenerateConfig, GeneratedImage } from "../types";
-
-const DEFAULT_IMAGE_CONFIGS: Record<string, Partial<ImageGenerateConfig>> = {
-  siliconflow: {
-    provider: "siliconflow",
-    model: "black-forest-labs/FLUX.1-schnell",
-    baseUrl: "https://api.siliconflow.cn/v1",
-    size: "1024x1024",
-  },
-  openai: {
-    provider: "openai",
-    model: "dall-e-3",
-    baseUrl: "https://api.openai.com/v1",
-    size: "1024x1024",
-  },
-};
+import { getAdapter, IMAGE_PROVIDER_PRESETS } from "./image-adapters";
 
 /**
- * Generate an image from a text prompt using Silicon Flow or OpenAI-compatible API.
+ * Generate an image from a text prompt using platform-specific adapter.
  */
 export async function generateImage(
   prompt: string,
   config: Partial<ImageGenerateConfig>
 ): Promise<GeneratedImage> {
-  const presetKey = config.provider || "siliconflow";
-  const preset = DEFAULT_IMAGE_CONFIGS[presetKey] || DEFAULT_IMAGE_CONFIGS.siliconflow;
+  const providerKey = config.provider || "siliconflow";
+  const preset = IMAGE_PROVIDER_PRESETS[providerKey] || IMAGE_PROVIDER_PRESETS.siliconflow;
+
   const merged: ImageGenerateConfig = {
-    provider: preset.provider!,
-    model: config.model || preset.model || "black-forest-labs/FLUX.1-schnell",
+    provider: providerKey,
+    model: config.model || preset.model,
     apiKey: config.apiKey || "",
-    baseUrl: config.baseUrl || preset.baseUrl || "https://api.siliconflow.cn/v1",
-    size: config.size || preset.size || "1024x1024",
+    apiSecret: config.apiSecret || "",
+    baseUrl: config.baseUrl || preset.baseUrl,
+    size: config.size || preset.size,
   };
 
   if (!merged.apiKey) {
     throw new Error("图片生成 API Key 未配置，请先在配置中心填写");
   }
 
-  const [width, height] = merged.size.split("x").map(Number);
-
-  // Silicon Flow uses OpenAI-compatible /images/generations endpoint
-  const url = `${merged.baseUrl.replace(/\/$/, "")}/images/generations`;
-
-  const body: Record<string, any> = {
-    model: merged.model,
-    prompt,
-    size: merged.size,
-    n: 1,
-  };
-
-  // Silicon Flow needs response_format for base64
-  if (merged.provider === "siliconflow") {
-    body.response_format = "b64_json";
+  // 腾讯混元需要 SecretKey
+  if (merged.provider === "tencent" && !merged.apiSecret) {
+    throw new Error("腾讯混元需要同时配置 SecretId 和 SecretKey");
   }
 
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${merged.apiKey}`,
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    const errText = await res.text().catch(() => "");
-    throw new Error(`图片生成失败 (${res.status}): ${errText}`);
-  }
-
-  const data = await res.json();
-  const image = data.data?.[0];
-
-  if (!image) {
-    throw new Error("图片生成返回数据为空");
-  }
-
-  // Prefer b64_json, fallback to url
-  let imageUrl: string;
-  if (image.b64_json) {
-    imageUrl = `data:image/png;base64,${image.b64_json}`;
-  } else if (image.url) {
-    imageUrl = image.url;
-  } else {
-    throw new Error("图片生成返回格式异常");
-  }
-
-  return {
-    prompt,
-    url: imageUrl,
-    width: width || 1024,
-    height: height || 1024,
-    model: merged.model,
-    createdAt: new Date().toISOString(),
-  };
+  const adapter = getAdapter(merged.provider);
+  return adapter.generate(prompt, merged);
 }
 
 /**

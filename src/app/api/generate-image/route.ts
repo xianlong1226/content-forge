@@ -49,9 +49,10 @@ export async function POST(req: NextRequest) {
   const serverConfig = await getImageSettings();
   const imageConfig: Partial<ImageGenerateConfig> = {
     provider: serverConfig.image_provider || "siliconflow",
-    model: serverConfig.image_model || "black-forest-labs/FLUX.1-schnell",
+    model: serverConfig.image_model || "",
     apiKey: serverConfig.image_api_key || "",
-    baseUrl: serverConfig.image_base_url || "https://api.siliconflow.cn/v1",
+    apiSecret: serverConfig.image_api_secret || "",
+    baseUrl: serverConfig.image_base_url || "",
     size: size || serverConfig.image_size || "1024x1024",
   };
 

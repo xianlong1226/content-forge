@@ -58,10 +58,13 @@ export interface GeneratedImage {
   createdAt: string;
 }
 
+export type ImageProvider = "siliconflow" | "openai" | "tencent" | "alibaba" | "bytedance";
+
 export interface ImageGenerateConfig {
   provider: string;
   model: string;
   apiKey: string;
+  apiSecret?: string;  // 腾讯混元用：SecretKey；其他平台可忽略
   baseUrl: string;
   size: string;      // e.g. "1024x1024"
 }

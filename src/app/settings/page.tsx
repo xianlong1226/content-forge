@@ -15,8 +15,52 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   image_provider: "siliconflow",
   image_model: "black-forest-labs/FLUX.1-schnell",
   image_api_key: "",
+  image_api_secret: "",
   image_base_url: "https://api.siliconflow.cn/v1",
   image_size: "1024x1024",
+};
+
+/** 各图片服务商预设 */
+const IMAGE_PRESETS: Record<
+  string,
+  { label: string; model: string; baseUrl: string; needsSecret: boolean; secretLabel?: string; apiKeyLabel: string }
+> = {
+  siliconflow: {
+    label: "Silicon Flow",
+    model: "black-forest-labs/FLUX.1-schnell",
+    baseUrl: "https://api.siliconflow.cn/v1",
+    needsSecret: false,
+    apiKeyLabel: "API Key",
+  },
+  openai: {
+    label: "OpenAI (DALL-E)",
+    model: "dall-e-3",
+    baseUrl: "https://api.openai.com/v1",
+    needsSecret: false,
+    apiKeyLabel: "API Key",
+  },
+  tencent: {
+    label: "腾讯混元",
+    model: "lite",
+    baseUrl: "https://aiart.tencentcloudapi.com",
+    needsSecret: true,
+    apiKeyLabel: "SecretId",
+    secretLabel: "SecretKey",
+  },
+  alibaba: {
+    label: "阿里百炼 (万相/千问)",
+    model: "wan2.7-image-pro",
+    baseUrl: "https://dashscope.aliyuncs.com",
+    needsSecret: false,
+    apiKeyLabel: "API Key",
+  },
+  bytedance: {
+    label: "字节火山 (豆包)",
+    model: "doubao-seedream-3.0",
+    baseUrl: "https://ark.cn-beijing.volces.com",
+    needsSecret: false,
+    apiKeyLabel: "API Key",
+  },
 };
 
 export default function SettingsPage() {
@@ -48,6 +92,8 @@ export default function SettingsPage() {
     setHasImageApiKey(!!settings.image_api_key);
     setTimeout(() => setSaved(false), 2000);
   }
+
+  const currentImagePreset = IMAGE_PRESETS[settings.image_provider] || IMAGE_PRESETS.siliconflow;
 
   return (
     <div className="p-8 max-w-3xl mx-auto">
@@ -219,43 +265,85 @@ export default function SettingsPage() {
               value={settings.image_provider}
               onChange={(e) => {
                 const provider = e.target.value;
-                const updates: Record<string, string> = { image_provider: provider };
-                if (provider === "siliconflow") {
-                  updates.image_model = "black-forest-labs/FLUX.1-schnell";
-                  updates.image_base_url = "https://api.siliconflow.cn/v1";
-                } else if (provider === "openai") {
-                  updates.image_model = "dall-e-3";
-                  updates.image_base_url = "https://api.openai.com/v1";
-                }
+                const preset = IMAGE_PRESETS[provider];
+                if (!preset) return;
+                const updates: Record<string, string> = {
+                  image_provider: provider,
+                  image_model: preset.model,
+                  image_base_url: preset.baseUrl,
+                };
                 setSettings({ ...settings, ...updates });
               }}
               className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
             >
-              <option value="siliconflow">Silicon Flow</option>
-              <option value="openai">OpenAI (DALL-E)</option>
+              {Object.entries(IMAGE_PRESETS).map(([key, preset]) => (
+                <option key={key} value={key}>
+                  {preset.label}
+                </option>
+              ))}
             </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Model</label>
-            <input
-              type="text"
-              value={settings.image_model}
-              onChange={(e) => setSettings({ ...settings, image_model: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-            />
+            {settings.image_provider === "tencent" ? (
+              <select
+                value={settings.image_model}
+                onChange={(e) => setSettings({ ...settings, image_model: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              >
+                <option value="lite">混元极速版 (TextToImageLite)</option>
+                <option value="v2">混元 2.0 (TextToImageRapid)</option>
+                <option value="v3">混元 3.0 (SubmitTextToImageJob)</option>
+              </select>
+            ) : (
+              <input
+                type="text"
+                value={settings.image_model}
+                onChange={(e) => setSettings({ ...settings, image_model: e.target.value })}
+                placeholder={currentImagePreset.model}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+            )}
           </div>
 
+          {/* API Key / SecretId */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">API Key</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {currentImagePreset.apiKeyLabel}
+            </label>
             <input
               type="password"
               value={settings.image_api_key}
               onChange={(e) => setSettings({ ...settings, image_api_key: e.target.value })}
-              placeholder="Silicon Flow / OpenAI API Key"
+              placeholder={
+                settings.image_provider === "tencent"
+                  ? "腾讯云 SecretId"
+                  : settings.image_provider === "alibaba"
+                  ? "百炼 API Key (sk-xxx)"
+                  : settings.image_provider === "bytedance"
+                  ? "火山方舟 API Key"
+                  : "API Key"
+              }
               className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
             />
           </div>
+
+          {/* 腾讯 SecretKey */}
+          {currentImagePreset.needsSecret && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {currentImagePreset.secretLabel || "Secret"}
+              </label>
+              <input
+                type="password"
+                value={settings.image_api_secret}
+                onChange={(e) => setSettings({ ...settings, image_api_secret: e.target.value })}
+                placeholder="腾讯云 SecretKey"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Base URL</label>
@@ -269,18 +357,89 @@ export default function SettingsPage() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">图片尺寸</label>
-            <select
-              value={settings.image_size}
-              onChange={(e) => setSettings({ ...settings, image_size: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-              <option value="1024x1024">1024 × 1024（方形）</option>
-              <option value="1280x720">1280 × 720（横版封面）</option>
-              <option value="720x1280">720 × 1280（竖版小红书）</option>
-              <option value="1024x576">1024 × 576（宽屏横版）</option>
-              <option value="576x1024">576 × 1024（窄竖版）</option>
-            </select>
+            {settings.image_provider === "tencent" ? (
+              <select
+                value={settings.image_size}
+                onChange={(e) => setSettings({ ...settings, image_size: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              >
+                <option value="1024x1024">1024 × 1024（方形 1:1）</option>
+                <option value="768x1024">768 × 1024（竖版 3:4）</option>
+                <option value="1024x768">1024 × 768（横版 4:3）</option>
+                <option value="576x1024">576 × 1024（竖版 9:16）</option>
+                <option value="1024x576">1024 × 576（横版 16:9）</option>
+              </select>
+            ) : settings.image_provider === "alibaba" ? (
+              <select
+                value={settings.image_size}
+                onChange={(e) => setSettings({ ...settings, image_size: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              >
+                <option value="1024x1024">1024 × 1024（方形）</option>
+                <option value="1280x720">1280 × 720（横版封面）</option>
+                <option value="720x1280">720 × 1280（竖版小红书）</option>
+                <option value="2048x2048">2048 × 2048（高清方形）</option>
+                <option value="1024x576">1024 × 576（宽屏横版）</option>
+                <option value="576x1024">576 × 1024（窄竖版）</option>
+              </select>
+            ) : (
+              <select
+                value={settings.image_size}
+                onChange={(e) => setSettings({ ...settings, image_size: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              >
+                <option value="1024x1024">1024 × 1024（方形）</option>
+                <option value="1280x720">1280 × 720（横版封面）</option>
+                <option value="720x1280">720 × 1280（竖版小红书）</option>
+                <option value="1024x576">1024 × 576（宽屏横版）</option>
+                <option value="576x1024">576 × 1024（窄竖版）</option>
+              </select>
+            )}
           </div>
+
+          {/* 平台提示 */}
+          {settings.image_provider === "tencent" && (
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+              💡 腾讯混元尺寸使用冒号分隔（如 1024:1024），系统会自动转换。SecretId/SecretKey 在
+              <a
+                href="https://console.cloud.tencent.com/cam/capi"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline font-medium"
+              >
+                腾讯云访问管理
+              </a>
+              获取。
+            </div>
+          )}
+          {settings.image_provider === "alibaba" && (
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+              💡 阿里百炼尺寸使用星号分隔（如 1024*1024），系统会自动转换。API Key 在
+              <a
+                href="https://bailian.console.aliyun.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline font-medium"
+              >
+                百炼控制台
+              </a>
+              获取。
+            </div>
+          )}
+          {settings.image_provider === "bytedance" && (
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+              💡 字节火山 API 兼容 OpenAI 格式。API Key 在
+              <a
+                href="https://console.volcengine.com/ark"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline font-medium"
+              >
+                火山方舟控制台
+              </a>
+              获取。
+            </div>
+          )}
         </div>
       </div>
 

@@ -86,7 +86,7 @@ export async function streamGenerate(
  */
 export function parseWechatOutput(raw: string) {
   const titleMatch = raw.match(/---TITLE---\s*\n(.+?)(?:\n|$)/);
-  const bodyMatch = raw.match(/---BODY---\s*\n([\s\S]*?)$/);
+  const bodyMatch = raw.match(/---BODY---\s*\n([\s\S]*?)(?=\n---COVER_IMAGE_PROMPT---|$)/);
 
   return {
     title: titleMatch?.[1]?.trim() || "未提取到标题",
